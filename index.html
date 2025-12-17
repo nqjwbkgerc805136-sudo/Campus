@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园消费行为数据分析与趋势预测（含建议）</title>
+  <!-- 内置基础样式 + 简化CDN（优先国内源） -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", "Inter", sans-serif;
+    }
+    body {
+      background-color: #f5f7fa;
+      color: #1d2129;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 0;
+    }
+    /* 核心样式 */
+    .card {
+      background-color: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .text-primary { color: #165DFF; }
+    .text-secondary { color: #FF7D00; }
+    .text-success { color: #00B42A; }
+    .bg-primary-light { background-color: #e6f7ff; }
+    .bg-secondary-light { background-color: #fff7e6; }
+    .bg-success-light { background-color: #f0fff4; }
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background-color: #165DFF;
+      color: #fff;
+    }
+    .btn-primary:hover { background-color: #0F48D9; }
+    .btn-secondary {
+      background-color: #FF7D00;
+      color: #fff;
+    }
+    .btn-secondary:hover { background-color: #E67000; }
+    /* 排版样式 */
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      text-align: center;
+      margin: 20px 0 30px;
+      font-weight: bold;
+    }
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin: 16px 0 24px;
+      display: flex;
+      align-items: center;
+    }
+    h2 i { margin-right: 10px; }
+    h3 {
+      font-size: clamp(1.2rem, 2vw, 1.5rem);
+      margin: 16px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    h4 {
+      font-size: 1.1rem;
+      margin: 12px 0 8px;
+      color: #165DFF;
+    }
+    /* 布局样式 */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .items-center { align-items: center; }
+    .space-x-2 > * { margin-right: 8px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .grid-col-3 { grid-template-columns: repeat(3, 1fr); }
+    }
+    .gap-4 { gap: 16px; }
+    /* 组件样式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    table th, table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      text-align: left;
+    }
+    table th { background-color: #f9fafb; }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      margin: 16px 0 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .tab.active {
+      border-bottom-color: #165DFF;
+      color: #165DFF;
+      font-weight: bold;
+    }
+    /* 图表容器样式：关键修复 - 给图表容器设置明确尺寸 */
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 300px; /* 固定高度，解决Chart.js渲染问题 */
+      margin: 16px 0;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .advice-card {
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    /* 导航栏样式 */
+    header {
+      background-color: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    nav a {
+      margin: 0 16px;
+      text-decoration: none;
+      color: #1d2129;
+      transition: color 0.3s ease;
+    }
+    nav a:hover { color: #165DFF; }
+    /* 移动端菜单 */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .mobile-menu {
+      display: none;
+      padding: 16px 0;
+      border-top: 1px solid #e5e7eb;
+    }
+    @media (max-width: 768px) {
+      .desktop-menu { display: none; }
+      .mobile-menu-btn { display: block; }
+      .mobile-menu.show { display: block; }
+      nav a { display: block; padding: 8px 0; }
+      .chart-container {
+        height: 250px; /* 移动端调整图表高度 */
+      }
+    }
+    /* 加载动画 */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spin-loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #165DFF;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+  </style>
+  <!-- 国内CDN：Chart.js + Font Awesome（优先使用稳定的CDN源） -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+  <!-- 导航栏 -->
+  <header>
+    <div class="container flex justify-between items-center">
+      <!-- 品牌标识 -->
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-line-chart text-primary text-2xl"></i>
+        <span class="text-xl font-bold text-primary">AI Econ Campus</span>
+      </div>
+      
+      <!-- 导航链接 - 桌面端 -->
+      <nav class="desktop-menu">
+        <a href="#upload">数据上传</a>
+        <a href="#analysis">数据分析</a>
+        <a href="#about">关于工具</a>
+      </nav>
+      
+      <!-- 移动端菜单按钮 -->
+      <button class="mobile-menu-btn" id="mobile-menu-button">
+        <i class="fa fa-bars"></i>
+      </button>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div class="mobile-menu" id="mobile-menu">
+      <div class="container">
+        <a href="#upload">数据上传</a>
+        <a href="#analysis">数据分析</a>
+        <a href="#about">关于工具</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <div class="container">
+    <!-- 英雄区域 -->
+    <section class="text-center mb-16">
+      <h1>校园消费行为<span class="text-primary">数据分析</span>
+        <br class="md:hidden">与<span class="text-secondary">趋势预测（含决策建议）</span>
+      </h1>
+      <p style="font-size: 18px; color: #666; margin: 20px 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+        基于AI算法的经济学分析工具，深度洞察校园消费特征，精准预测趋势并提供可落地的决策建议
+      </p>
+      <a href="#upload" class="btn btn-primary">
+        立即上传数据 <i class="fa fa-arrow-right ml-2"></i>
+      </a>
+    </section>
+
+    <!-- 数据上传区域 -->
+    <section id="upload" class="card">
+      <h2>
+        <i class="fa fa-upload text-primary"></i> 数据上传与导入
+      </h2>
+      
+      <div class="grid">
+        <!-- 手动上传 -->
+        <div style="border: 2px dashed #ccc; border-radius: 16px; padding: 32px; text-align: center; cursor: pointer; transition: border 0.3s ease;" onclick="document.getElementById('file-upload').click()">
+          <i class="fa fa-file-excel-o text-5xl text-primary mb-4"></i>
+          <h3 style="border: none; text-align: center;">上传Excel/CSV文件</h3>
+          <p style="color: #666; margin: 8px 0;">支持.xlsx、.csv格式，大小不超过10MB</p>
+          <input id="file-upload" type="file" accept=".xlsx,.csv" class="hidden">
+          <span style="background-color: #e6f7ff; color: #165DFF; padding: 8px 16px; border-radius: 8px; display: inline-block; margin-top: 8px;">选择文件</span>
+        </div>
+        
+        <!-- 样本数据 -->
+        <div style="background-color: #f9fafb; border-radius: 16px; padding: 32px;">
+          <h3 style="border: none; display: flex; align-items: center;">
+            <i class="fa fa-database text-secondary mr-2"></i> 使用样本数据
+          </h3>
+          <p style="color: #666; margin: 16px 0;">基于562名大学生消费行为调查的样本数据，包含性别、年级、生活费、餐饮偏好等维度</p>
+          <div style="margin: 16px 0;">
+            <div style="display: flex; align-items: center; margin: 8px 0;">
+              <i class="fa fa-check text-green-500 mr-2"></i>
+              <span>562个有效样本</span>
+            </div>
+            <div style="display: flex; align-items: center; margin: 8px 0;">
+              <i class="fa fa-check text-green-500 mr-2"></i>
+              <span>16个消费行为维度</span>
+            </div>
+            <div style="display: flex; align-items: center; margin: 8px 0;">
+              <i class="fa fa-check text-green-500 mr-2"></i>
+              <span>完整的人口统计数据</span>
+            </div>
+          </div>
+          <button id="use-sample-data" class="btn btn-secondary" style="width: 100%; padding: 12px 0;">
+            加载样本数据
+          </button>
+        </div>
+      </div>
+      
+      <!-- 数据预览 -->
+      <div id="data-preview" class="mt-8 hidden">
+        <h3 style="border: none;">数据预览</h3>
+        <div style="overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <table>
+            <thead>
+              <tr>
+                <th>性别</th>
+                <th>年级</th>
+                <th>月生活费</th>
+                <th>餐饮偏好</th>
+                <th>零食消费</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>男</td>
+                <td>大一</td>
+                <td>1500-2500元</td>
+                <td>食堂正餐、外卖</td>
+                <td>200-500元</td>
+              </tr>
+              <tr>
+                <td>女</td>
+                <td>大二</td>
+                <td>1500元及以下</td>
+                <td>食堂正餐、奶茶店</td>
+                <td>1-200元</td>
+              </tr>
+              <tr>
+                <td>男</td>
+                <td>大三</td>
+                <td>2500-3500元</td>
+                <td>外卖、校内便利店</td>
+                <td>500元以上</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+          <button id="start-analysis" class="btn btn-primary">
+            开始分析 <i class="fa fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数据分析区域（整合预测+建议） -->
+    <section id="analysis" class="card hidden">
+      <h2>
+        <i class="fa fa-bar-chart text-primary"></i> 消费行为数据分析（含趋势预测与决策建议）
+      </h2>
+      
+      <!-- 分析选项卡 -->
+      <div class="tabs">
+        <div class="tab active" id="demographic-tab">人口统计分析</div>
+        <div class="tab" id="consumption-tab">消费结构分析</div>
+        <div class="tab" id="preference-tab">消费偏好分析</div>
+        <div class="tab" id="problem-tab">消费痛点分析</div>
+      </div>
+      
+      <!-- 1. 人口统计分析（含趋势+建议） -->
+      <div id="demographic-analysis" class="analysis-content">
+        <div class="grid">
+          <!-- 性别分布 -->
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>性别分布</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="gender-chart"></canvas>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; text-align: center;">
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">男性占比</p>
+                <p style="font-size: 24px; font-weight: bold; color: #165DFF;">40.75%</p>
+              </div>
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">女性占比</p>
+                <p style="font-size: 24px; font-weight: bold; color: #FF7D00;">59.25%</p>
+              </div>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 性别消费趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>女性消费金额将增长<span style="font-weight: bold;">15.2%</span>，主要集中在奶茶、零食、美妆类</li>
+                <li>男性消费金额将增长<span style="font-weight: bold;">8.7%</span>，主要集中在餐饮、电竞、日用品类</li>
+                <li>性别消费偏好差异将持续扩大，需针对性布局商品品类</li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>校内奶茶店、美妆店可优先布局女生宿舍区附近</li>
+                <li>电竞外设、运动饮品可在男生宿舍区周边增加铺货</li>
+                <li>食堂可设置男女偏好的菜品窗口（如女生的轻食窗口、男生的大份菜窗口）</li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- 年级分布 -->
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>年级分布</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="grade-chart"></canvas>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; text-align: center;">
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">大一学生占比</p>
+                <p style="font-size: 24px; font-weight: bold; color: #165DFF;">80.25%</p>
+              </div>
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">高年级学生占比</p>
+                <p style="font-size: 24px; font-weight: bold; color: #FF7D00;">19.75%</p>
+              </div>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 年级消费趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>大一学生消费将从“适应期”转向“稳定期”，月消费金额增长<span style="font-weight: bold;">12.3%</span></li>
+                <li>高年级学生消费将向“实习/就业导向”倾斜，餐饮消费占比下降<span style="font-weight: bold;">7.8%</span></li>
+                <li>大一学生对校内娱乐设施的需求将增长<span style="font-weight: bold;">20.5%</span></li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>优先针对大一学生推出校园消费套餐（如奶茶+零食组合优惠）</li>
+                <li>高年级学生区域可增加职业类书籍、通勤用品的铺货</li>
+                <li>校内娱乐设施（如桌游吧、影院）可主打大一学生群体的营销活动</li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- 月生活费分布 -->
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); grid-column: 1 / -1;">
+            <h3>月生活费分布</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="living-cost-chart"></canvas>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; text-align: center;">
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">1500元及以下</p>
+                <p style="font-size: 20px; font-weight: bold; color: #165DFF;">32.03%</p>
+              </div>
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">1500-2500元</p>
+                <p style="font-size: 20px; font-weight: bold; color: #FF7D00;">55.87%</p>
+              </div>
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">2500-3500元</p>
+                <p style="font-size: 20px; font-weight: bold; color: #165DFF;">6.05%</p>
+              </div>
+              <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                <p style="color: #666; font-size: 14px;">3500元及以上</p>
+                <p style="font-size: 20px; font-weight: bold; color: #FF7D00;">6.05%</p>
+              </div>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 生活费消费趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>1500-2500元层级学生将成为消费主力，占比将上升至<span style="font-weight: bold;">60.2%</span></li>
+                <li>1500元及以下层级学生的价格敏感度将持续偏高，对优惠活动的响应率达<span style="font-weight: bold;">78.5%</span></li>
+                <li>高生活费层级（2500+）学生的高端消费需求将增长<span style="font-weight: bold;">18.3%</span></li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>核心商品定价以1500-2500元层级学生的消费能力为基准（如奶茶定价8-15元）</li>
+                <li>针对低生活费层级学生推出“特价区”和满减活动（如满20减5）</li>
+                <li>少量布局高端商品（如进口零食、轻奢美妆）满足高生活费层级学生需求</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 2. 消费结构分析（含趋势+建议） -->
+      <div id="consumption-analysis" class="analysis-content hidden">
+        <div class="grid">
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>餐饮消费场景偏好</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="dining-scene-chart"></canvas>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 餐饮场景趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>外卖消费占比将从<span style="font-weight: bold;">60.68%</span>上升至<span style="font-weight: bold;">79.38%</span>，主要受懒宅经济驱动</li>
+                <li>食堂正餐占比将缓慢下降至<span style="font-weight: bold;">77.5%</span>，但仍是主流选择</li>
+                <li>校内奶茶店消费占比将增长<span style="font-weight: bold;">5.2%</span>，季节性（夏季）增长更明显</li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>食堂可推出“外卖窗口”，承接校内外卖订单，减少学生外流消费</li>
+                <li>奶茶店可推出夏季限定饮品，搭配冰淇淋、小食提升客单价</li>
+                <li>校内便利店可增加速食加热服务，满足即时餐饮需求</li>
+              </ul>
+            </div>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>零食消费层级</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="snack-cost-chart"></canvas>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 零食消费趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>中消费层（200-500元）占比将上升至<span style="font-weight: bold;">45%</span>，成为零食消费主力</li>
+                <li>高消费层（500元以上）占比将增长<span style="font-weight: bold;">3.2%</span>，主要为进口零食消费</li>
+                <li>低消费层（1-200元）占比将下降<span style="font-weight: bold;">5.8%</span>，学生更愿意为优质零食付费</li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>校内超市可增加中高端零食品类（如坚果礼盒、进口饼干），减少低价劣质零食</li>
+                <li>推出零食组合包（如追剧零食包、早餐零食包），提升单次购买金额</li>
+                <li>针对女生群体推出低糖、低脂零食专区，契合健康消费趋势</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 3. 消费偏好分析（含趋势+建议） -->
+      <div id="preference-analysis" class="analysis-content hidden">
+        <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+          <h3>校内新增需求TOP3</h3>
+          <!-- 图表容器：新增带固定尺寸的容器 -->
+          <div class="chart-container">
+            <canvas id="new-facility-demand-chart"></canvas>
+          </div>
+
+          <!-- 趋势预测 -->
+          <h4>📈 设施需求趋势预测（6个月）</h4>
+          <div class="advice-card bg-primary-light">
+            <ul style="padding-left: 20px; color: #0a58ca;">
+              <li>小吃店需求将持续高居榜首，占比将上升至<span style="font-weight: bold;">78%</span>，尤其是地方特色小吃</li>
+              <li>大型超市需求将增长<span style="font-weight: bold;">4.3%</span>，学生希望一站式购齐生活用品</li>
+              <li>美妆店需求将增长<span style="font-weight: bold;">6.5%</span>，主要为平价美妆品类</li>
+            </ul>
+          </div>
+
+          <!-- 决策建议 -->
+          <h4>💡 决策建议</h4>
+          <div class="advice-card bg-success-light">
+            <ul style="padding-left: 20px; color: #03703c;">
+              <li>优先引进地方特色小吃店（如螺蛳粉、肉夹馍），填补校内餐饮品类空白</li>
+              <li>扩建校内超市，增加生活用品、美妆品类的铺货面积</li>
+              <li>引入平价美妆品牌（如完美日记、珂拉琪），开设校内专柜</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 4. 消费痛点分析（含趋势+建议） -->
+      <div id="problem-analysis" class="analysis-content hidden">
+        <div class="grid">
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>出餐速度问题</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="food-speed-problem-chart"></canvas>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 出餐速度趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>高峰期（午餐11:30-12:30）出餐慢的投诉将增长<span style="font-weight: bold;">10.5%</span></li>
+                <li>若不优化流程，学生因出餐慢选择外卖的比例将上升<span style="font-weight: bold;">15%</span></li>
+                <li>自助点餐系统可将出餐效率提升<span style="font-weight: bold;">30%</span></li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>食堂引入自助点餐机或微信点餐系统，实现提前下单、到店取餐</li>
+                <li>高峰期增加临时出餐窗口，分流点餐人群</li>
+                <li>对商家进行出餐效率培训，设定出餐时间标准（如10分钟内）</li>
+              </ul>
+            </div>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <h3>商品价格合理性</h3>
+            <!-- 图表容器：新增带固定尺寸的容器 -->
+            <div class="chart-container">
+              <canvas id="price-reasonableness-chart"></canvas>
+            </div>
+
+            <!-- 趋势预测 -->
+            <h4>📈 价格趋势预测（6个月）</h4>
+            <div class="advice-card bg-primary-light">
+              <ul style="padding-left: 20px; color: #0a58ca;">
+                <li>认为价格不合理的学生占比将上升至<span style="font-weight: bold;">55%</span>，主要受校外电商价格冲击</li>
+                <li>学生对“平价替代”商品的需求将增长<span style="font-weight: bold;">20%</span></li>
+                <li>会员制折扣可将价格敏感度降低<span style="font-weight: bold;">30%</span></li>
+              </ul>
+            </div>
+
+            <!-- 决策建议 -->
+            <h4>💡 决策建议</h4>
+            <div class="advice-card bg-success-light">
+              <ul style="padding-left: 20px; color: #03703c;">
+                <li>校内商家可推出“校园会员卡”，充值享9折优惠，锁定长期消费</li>
+                <li>对标校外超市价格，对核心商品（如矿泉水、方便面）实行平价销售</li>
+                <li>推出“临期商品折扣区”，既降低库存又满足低价需求</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 关于工具区域 -->
+    <section id="about" class="card">
+      <h2>
+        <i class="fa fa-info-circle text-primary"></i> 关于本工具
+      </h2>
+      
+      <div class="grid">
+        <div>
+          <h3>工具简介</h3>
+          <p style="margin: 8px 0; line-height: 1.6;">
+            本工具是基于AI+经济学理论开发的校园消费行为分析平台，将<span style="font-weight: bold; color: #165DFF;">数据分析、趋势预测、决策建议</span>一体化呈现，帮助高校管理者、商家和研究人员深度理解学生消费行为特征，为决策提供可落地的支撑。
+          </p>
+          <p style="margin: 8px 0; line-height: 1.6;">
+            工具集成了机器学习算法和经济学分析模型，能够快速处理大规模校园消费数据，生成可视化分析报告、趋势预测结果和针对性的决策建议。
+          </p>
+          <h3 style="margin-top: 16px;">核心功能</h3>
+          <ul style="margin: 8px 0; padding-left: 20px; line-height: 1.6;">
+            <li>多维度数据可视化分析</li>
+            <li>AI驱动的消费趋势预测（短期/中期/长期）</li>
+            <li>针对性的落地决策建议</li>
+            <li>消费痛点智能识别与解决方案</li>
+          </ul>
+        </div>
+        <div>
+          <h3>应用场景</h3>
+          <div style="margin: 8px 0; line-height: 1.6;">
+            <div style="display: flex; align-items: flex-start; margin: 8px 0;">
+              <i class="fa fa-university text-primary" style="margin-right: 8px; margin-top: 4px;"></i>
+              <div>
+                <h4 style="color: #1d2129; margin: 0 0 4px 0;">高校后勤管理</h4>
+                <p style="font-size: 14px; color: #666; margin: 0;">优化校内商业布局，提升服务质量，减少学生校外消费外流</p>
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; margin: 8px 0;">
+              <i class="fa fa-shopping-bag text-primary" style="margin-right: 8px; margin-top: 4px;"></i>
+              <div>
+                <h4 style="color: #1d2129; margin: 0 0 4px 0;">校园商家经营</h4>
+                <p style="font-size: 14px; color: #666; margin: 0;">精准定位消费需求，优化产品结构，提升客单价和复购率</p>
+              </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; margin: 8px 0;">
+              <i class="fa fa-book text-primary" style="margin-right: 8px; margin-top: 4px;"></i>
+              <div>
+                <h4 style="color: #1d2129; margin: 0 0 4px 0;">学术研究分析</h4>
+                <p style="font-size: 14px; color: #666; margin: 0;">支持消费行为相关课题研究，提供数据和趋势支撑</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 页脚 -->
+  <footer style="background-color: #1d2129; color: #fff; padding: 32px 0; margin-top: 32px;">
+    <div class="container" style="text-align: center;">
+      <p>© 2025 AI Econ Campus. 数据分析+趋势预测+决策建议一体化平台 | 保留所有权利。</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 等待页面完全加载后再执行脚本
+    document.addEventListener('DOMContentLoaded', function() {
+      // 移动端菜单切换
+      document.getElementById('mobile-menu-button').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('show');
+      });
+      
+      // 样本数据加载
+      document.getElementById('use-sample-data').addEventListener('click', function() {
+        document.getElementById('data-preview').classList.remove('hidden');
+        document.getElementById('data-preview').scrollIntoView({ behavior: 'smooth' });
+      });
+      
+      // 文件上传处理
+      document.getElementById('file-upload').addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+          document.getElementById('data-preview').classList.remove('hidden');
+          document.getElementById('data-preview').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+      
+      // 开始分析按钮
+      document.getElementById('start-analysis').addEventListener('click', function() {
+        const analysisSection = document.getElementById('analysis');
+        analysisSection.classList.remove('hidden');
+        analysisSection.scrollIntoView({ behavior: 'smooth' });
+        // 延迟初始化图表，确保元素完全显示
+        setTimeout(initCharts, 300);
+      });
+      
+      // 分析选项卡切换
+      const tabs = ['demographic-tab', 'consumption-tab', 'preference-tab', 'problem-tab'];
+      const contents = ['demographic-analysis', 'consumption-analysis', 'preference-analysis', 'problem-analysis'];
+      
+      tabs.forEach((tabId, index) => {
+        document.getElementById(tabId).addEventListener('click', function() {
+          // 重置所有选项卡样式
+          tabs.forEach(id => {
+            document.getElementById(id).classList.remove('active');
+          });
+          // 设置当前选项卡样式
+          this.classList.add('active');
+          // 隐藏所有内容
+          contents.forEach(contentId => {
+            document.getElementById(contentId).classList.add('hidden');
+          });
+          // 显示当前内容
+          document.getElementById(contents[index]).classList.remove('hidden');
+          // 切换选项卡后重新初始化图表（防止图表尺寸异常）
+          setTimeout(initCharts, 100);
+        });
+      });
+    });
+    
+    // 初始化所有分析图表（添加容错处理）
+    function initCharts() {
+      // 销毁已存在的图表，避免重复创建
+      if (window.charts) {
+        window.charts.forEach(chart => chart.destroy());
+      }
+      window.charts = [];
+
+      // 1. 性别分布图表
+      const genderCtx = document.getElementById('gender-chart');
+      if (genderCtx) {
+        const genderChart = new Chart(genderCtx, {
+          type: 'pie',
+          data: {
+            labels: ['男性', '女性'],
+            datasets: [{
+              data: [40.75, 59.25],
+              backgroundColor: ['#165DFF', '#FF7D00'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false, // 配合容器尺寸，关闭自动比例
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+        window.charts.push(genderChart);
+      }
+      
+      // 2. 年级分布图表
+      const gradeCtx = document.getElementById('grade-chart');
+      if (gradeCtx) {
+        const gradeChart = new Chart(gradeCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['大一', '大二', '大三', '大四'],
+            datasets: [{
+              data: [80.25, 9.61, 4.27, 5.87],
+              backgroundColor: ['#165DFF', '#36CFFB', '#722ED1', '#FF7D00'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+        window.charts.push(gradeChart);
+      }
+      
+      // 3. 月生活费分布图表
+      const livingCostCtx = document.getElementById('living-cost-chart');
+      if (livingCostCtx) {
+        const livingCostChart = new Chart(livingCostCtx, {
+          type: 'bar',
+          data: {
+            labels: ['1500及以下', '1500-2500', '2500-3500', '3500及以上'],
+            datasets: [{
+              label: '学生占比(%)',
+              data: [32.03, 55.87, 6.05, 6.05],
+              backgroundColor: '#165DFF',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { 
+              y: { 
+                beginAtZero: true, 
+                max: 100,
+                ticks: { callback: value => value + '%' } // 显示百分比
+              } 
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+        window.charts.push(livingCostChart);
+      }
+      
+      // 4. 餐饮消费场景偏好图表
+      const diningSceneCtx = document.getElementById('dining-scene-chart');
+      if (diningSceneCtx) {
+        const diningSceneChart = new Chart(diningSceneCtx, {
+          type: 'bar',
+          data: {
+            labels: ['食堂正餐', '外卖', '便利店', '奶茶店'],
+            datasets: [{
+              data: [81.32, 60.68, 30.60, 24.73],
+              backgroundColor: ['#165DFF', '#FF7D00', '#36CFFB', '#722ED1'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: { 
+              x: { 
+                beginAtZero: true, 
+                max: 100,
+                ticks: { callback: value => value + '%' }
+              } 
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+        window.charts.push(diningSceneChart);
+      }
+      
+      // 5. 零食消费图表
+      const snackCostCtx = document.getElementById('snack-cost-chart');
+      if (snackCostCtx) {
+        const snackCostChart = new Chart(snackCostCtx, {
+          type: 'pie',
+          data: {
+            labels: ['1-200元', '200-500元', '500元以上'],
+            datasets: [{
+              data: [45.02, 37.01, 17.97],
+              backgroundColor: ['#165DFF', '#FF7D00', '#36CFFB'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+        window.charts.push(snackCostChart);
+      }
+      
+      // 6. 校内新增需求图表
+      const newFacilityCtx = document.getElementById('new-facility-demand-chart');
+      if (newFacilityCtx) {
+        const newFacilityChart = new Chart(newFacilityCtx, {
+          type: 'bar',
+          data: {
+            labels: ['小吃店', '大型超市', '奶茶店', '美妆店', '书店'],
+            datasets: [{
+              data: [73.49, 70.64, 61.92, 39.32, 57.83],
+              backgroundColor: '#165DFF',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: { 
+              x: { 
+                beginAtZero: true, 
+                max: 100,
+                ticks: { callback: value => value + '%' }
+              } 
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+        window.charts.push(newFacilityChart);
+      }
+      
+      // 7. 出餐速度问题图表
+      const foodSpeedCtx = document.getElementById('food-speed-problem-chart');
+      if (foodSpeedCtx) {
+        const foodSpeedChart = new Chart(foodSpeedCtx, {
+          type: 'pie',
+          data: {
+            labels: ['经常', '偶尔', '从未'],
+            datasets: [{
+              data: [11.21, 53.74, 35.05],
+              backgroundColor: ['#FF7D00', '#36CFFB', '#165DFF'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+        window.charts.push(foodSpeedChart);
+      }
+      
+      // 8. 价格合理性图表
+      const priceReasonCtx = document.getElementById('price-reasonableness-chart');
+      if (priceReasonCtx) {
+        const priceReasonChart = new Chart(priceReasonCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['不合理', '合理'],
+            datasets: [{
+              data: [47.51, 52.49],
+              backgroundColor: ['#FF7D00', '#165DFF'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+        window.charts.push(priceReasonChart);
+      }
+    }
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+          document.getElementById('mobile-menu').classList.remove('show');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
